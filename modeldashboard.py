@@ -160,6 +160,22 @@ def main():
                 "text/csv",
                 key='download-csv'
             )
+    else:
+        if st.button('Run test file'):
+            df=pd.read_excel("test.xlsx",names=['vol','Abs','x'])
+            s1=df['Abs']
+            data=fitting_prog(s1)
+            df_out[uploaded_file.name]=pd.Series(data)
+            st.markdown("# Dataframe Overview")
+            st.dataframe(df_out,1000, 1000)
+            csv = convert_df(df_out)
+            st.download_button(
+                "Press to Download",
+                csv,
+                "file.csv",
+                "text/csv",
+                key='download-csv'
+            )
             # st.pyplot(fig)
             # df[file_name]=pd.Series(data)
         # df=pd.read_pickle(uploaded_file)
