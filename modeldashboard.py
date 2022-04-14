@@ -133,39 +133,15 @@ def findPeaks(s=pd.Series(),prominence=0.005,width=50):
 def convert_df(df):
    return df.to_csv().encode('utf-8')
 def main():
-    st.sidebar.header('Uploaded files')
+    
     uploaded_files =st.file_uploader("upload data file",accept_multiple_files=True)
     df_out=pd.DataFrame(columns=['40S','60S','80S','Polysome1','Polysome2','Polysome3','Polysome4'])
     df_out=df_out.T
-    
-    if uploaded_files is not None:
-        for uploaded_file in uploaded_files:
-            st.write("Processing file: "+uploaded_file.name)
-            st.sidebar.write(uploaded_file.name)
-            df=pd.read_excel(uploaded_file,names=['vol','Abs','x'])
-            s1=df['Abs']
-            data=fitting_prog(s1)
-            df_out[uploaded_file.name]=pd.Series(data)
-        st.markdown("# Dataframe Overview")
-        # z=st.sidebar.slider("Select rows",0,df_out.shape[0],value=[0,df_out.shape[0]])
-        # st.markdown(f"slected range is {z}")
-        # Y=st.sidebar.multiselect('Select Column',list(df_out.columns),default=list(df_out.columns)[0:1])
-        st.dataframe(df_out,1000, 1000)
-        csv = convert_df(df_out)
-
-        st.download_button(
-                "Press to Download",
-                csv,
-                "file.csv",
-                "text/csv",
-                key='download-csv'
-            )
-    else:
-        if st.button('Run test file'):
+    if st.sidebar.button('Run test file'):
             df=pd.read_excel("test.xlsx",names=['vol','Abs','x'])
             s1=df['Abs']
             data=fitting_prog(s1)
-            df_out[uploaded_file.name]=pd.Series(data)
+            df_out["test.xlsx"]=pd.Series(data)
             st.markdown("# Dataframe Overview")
             st.dataframe(df_out,1000, 1000)
             csv = convert_df(df_out)
@@ -176,6 +152,31 @@ def main():
                 "text/csv",
                 key='download-csv'
             )
+    else:
+        st.sidebar.header('Uploaded files')
+        if uploaded_files is not None:
+            for uploaded_file in uploaded_files:
+                st.write("Processing file: "+uploaded_file.name)
+                st.sidebar.write(uploaded_file.name)
+                df=pd.read_excel(uploaded_file,names=['vol','Abs','x'])
+                s1=df['Abs']
+                data=fitting_prog(s1)
+                df_out[uploaded_file.name]=pd.Series(data)
+            st.markdown("# Dataframe Overview")
+            # z=st.sidebar.slider("Select rows",0,df_out.shape[0],value=[0,df_out.shape[0]])
+            # st.markdown(f"slected range is {z}")
+            # Y=st.sidebar.multiselect('Select Column',list(df_out.columns),default=list(df_out.columns)[0:1])
+            st.dataframe(df_out,1000, 1000)
+            csv = convert_df(df_out)
+
+            st.download_button(
+                    "Press to Download",
+                    csv,
+                    "file.csv",
+                    "text/csv",
+                    key='download-csv'
+                )
+        
             # st.pyplot(fig)
             # df[file_name]=pd.Series(data)
         # df=pd.read_pickle(uploaded_file)
