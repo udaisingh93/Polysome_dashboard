@@ -27,7 +27,7 @@ def fitting_prog(s1):
     # pars['skg_sigma1'].set(value=15, min=200,max=400)
 #     print(pars)
     mod=pol_mod+skew_gauss
-    for i in range(len(peaks)-1):
+    for i in range(len(peaks)-2):
         gauss1 = SplitLorentzianModel(prefix=f'g{i}_')
         pars.update(gauss1.make_params())
         pars[f'g{i}_center'].set(value=peaks['peak'][i+1],min=peaks['peak'][i+1]-10,max=peaks['peak'][i+1]+10)
@@ -51,7 +51,7 @@ def fitting_prog(s1):
     plt.plot(x, comps['skg_'], '--', label=f'logistic rectangular component')
     c1=out.params['pol_c0']
     data={'40S':0,'60S':0,'80S':0,'Polysome1':0,'Polysome2':0,'Polysome3':0,'Polysome4':0}
-    for i in range(len(peaks)-1):
+    for i in range(len(peaks)-2):
 #         print(f"SplitLorentzian_{i} intergral :", comps[f'g{i}_'].sum())
         if(i<3):
             plt.plot(x, comps[f'g{i}_'], '--', label=f'{names[i]} component')
