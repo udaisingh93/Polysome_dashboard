@@ -22,7 +22,7 @@ def fitting_prog(s1):
     pars = pol_mod.guess(y, x=x)
     pars.update(skew_gauss.make_params())
     pars[f'pol_c1'].set(value=-0.01, min=-2,max=0)
-    pars[f'pol_c0'].set(value=0.0, min=0.01,max=0.3)
+    pars[f'pol_c0'].set(value=0.0, min=0.01,max=0.2)
     pars['skg_center1'].set(value=peaks['peak'][0]-200,min=peaks['peak'][0]-700,max=peaks['peak'][0]+100)
     pars['skg_center2'].set(value=peaks['peak'][0]+200,min=peaks['peak'][0]-100,max=peaks['peak'][0]+700)
     # pars['skg_sigma1'].set(value=15, min=200,max=400)
