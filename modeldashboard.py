@@ -22,19 +22,18 @@ def fitting_prog(s1):
     pars = pol_mod.guess(y, x=x)
     pars.update(skew_gauss.make_params())
     pars[f'pol_c1'].set(value=-0.01, min=-2,max=0)
-    pars[f'pol_c0'].set(value=0.0, min=0.01,max=0.3)
     pars['skg_center1'].set(value=peaks['peak'][0]-200,min=peaks['peak'][0]-700,max=peaks['peak'][0]+100)
     pars['skg_center2'].set(value=peaks['peak'][0]+200,min=peaks['peak'][0]-100,max=peaks['peak'][0]+700)
     # pars['skg_sigma1'].set(value=15, min=200,max=400)
 #     print(pars)
     mod=pol_mod+skew_gauss
-    for i in range(len(peaks)-2):
+    for i in range(7):
         gauss1 = SplitLorentzianModel(prefix=f'g{i}_')
         pars.update(gauss1.make_params())
         pars[f'g{i}_center'].set(value=peaks['peak'][i+1],min=peaks['peak'][i+1]-10,max=peaks['peak'][i+1]+10)
-        pars[f'g{i}_sigma'].set(value=15, min=50,max=230)
-        pars[f'g{i}_sigma_r'].set(value=15, min=50,max=250)
-        pars[f'g{i}_amplitude'].set(value=100, min=100)
+        pars[f'g{i}_sigma'].set(value=15, min=3,max=130)
+        pars[f'g{i}_sigma_r'].set(value=15, min=3,max=150)
+        pars[f'g{i}_amplitude'].set(value=1, min=0.2)
         mod+=gauss1
     init = mod.eval(pars, x=x)
     out = mod.fit(y, pars, x=x)
@@ -52,7 +51,7 @@ def fitting_prog(s1):
     plt.plot(x, comps['skg_'], '--', label=f'logistic rectangular component')
     c1=out.params['pol_c0']
     data={'40S':0,'60S':0,'80S':0,'Polysome1':0,'Polysome2':0,'Polysome3':0,'Polysome4':0}
-    for i in range(len(peaks)-2):
+    for i in range(7):
 #         print(f"SplitLorentzian_{i} intergral :", comps[f'g{i}_'].sum())
         if(i<3):
             plt.plot(x, comps[f'g{i}_'], '--', label=f'{names[i]} component')
@@ -202,4 +201,3 @@ if __name__ == "__main__":
 # Streamlit widgets automatically run the script from top to bottom. Since
 # this button is not connected to any other logic, it just causes a plain
 # rerun.
-   
