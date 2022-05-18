@@ -85,8 +85,10 @@ def main():
     if st.sidebar.button('Run test file'):
             df=pd.read_excel("test.xlsx",names=['vol','Abs','x'])
             s1=df['Abs']
-            data=fitting_prog(s1)
+            
             peaks = findPeaks(s1[s1.index<6000])
+            fig,data,coff=fitting_prog(s1,peaks)
+            st.pyplot(fig)
             df_out["test.xlsx"]=pd.Series(data,peaks)
             st.markdown("# Dataframe Overview")
             st.dataframe(df_out,1000, 1000)
