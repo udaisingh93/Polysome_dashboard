@@ -1,17 +1,24 @@
+from ast import While
+from cProfile import label
+from enum import Flag
+from tkinter.messagebox import NO
+from turtle import goto
 import streamlit as st
 import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib
 from scipy import signal
 from lmfit.models import ExponentialModel, GaussianModel,PolynomialModel,RectangleModel,SkewedGaussianModel,PowerLawModel,SplitLorentzianModel
-
+pd.options.plotting.backend = "plotly"
 # progress_bar = st.sidebar.progress(0)
 # status_text = st.sidebar.empty()
 # last_rows = np.random.randn(1, 1)
 # chart = st.line_chart(last_rows)
-def fitting_prog(s1):
-    peaks = findPeaks(s1[s1.index<6000])
+@st.cache(hash_funcs={matplotlib.figure.Figure: hash})
+def fitting_prog(s1,peaks):
+    
     
 #     x=np.array(s1.index)
     x=np.array(s1[s1.index<6000].index)
@@ -22,7 +29,7 @@ def fitting_prog(s1):
     pars = pol_mod.guess(y, x=x)
     pars.update(skew_gauss.make_params())
     pars[f'pol_c1'].set(value=-0.01, min=-2,max=0)
-    pars[f'pol_c0'].set(value=0.0, min=0.01,max=0.2)
+    pars[f'pol_c0'].set(value=-0.01, min=-1,max=0.15)
     pars['skg_center1'].set(value=peaks['peak'][0]-200,min=peaks['peak'][0]-700,max=peaks['peak'][0]+100)
     pars['skg_center2'].set(value=peaks['peak'][0]+200,min=peaks['peak'][0]-100,max=peaks['peak'][0]+700)
     # pars['skg_sigma1'].set(value=15, min=200,max=400)
@@ -31,10 +38,10 @@ def fitting_prog(s1):
     for i in range(len(peaks)-2):
         gauss1 = SplitLorentzianModel(prefix=f'g{i}_')
         pars.update(gauss1.make_params())
-        pars[f'g{i}_center'].set(value=peaks['peak'][i+1],min=peaks['peak'][i+1]-10,max=peaks['peak'][i+1]+10)
-        pars[f'g{i}_sigma'].set(value=15, min=50,max=230)
-        pars[f'g{i}_sigma_r'].set(value=15, min=50,max=250)
-        pars[f'g{i}_amplitude'].set(value=100, min=100)
+        pars[f'g{i}_center'].set(value=peaks['peak'][i+1],min=peaks['peak'][i+1]-20,max=peaks['peak'][i+1]+20)
+        pars[f'g{i}_sigma'].set(value=15, min=3,max=150)
+        pars[f'g{i}_sigma_r'].set(value=15, min=3,max=300)
+        pars[f'g{i}_amplitude'].set(value=2, min=1)
         mod+=gauss1
     init = mod.eval(pars, x=x)
     out = mod.fit(y, pars, x=x)
@@ -44,7 +51,7 @@ def fitting_prog(s1):
     # axes[0].plot(x, out.best_fit, '-', label='best fit')
     # axes[0].legend()
     fig=plt.figure(figsize=(12,10))
-
+    # st.sidebar.write(np.corrcoef(y,out.best_fit)[0,1])
     # axes[1].plot(x, y)
     plt.plot(s1.index, s1)
     plt.plot(x, out.best_fit, '-', label='best fit')
@@ -68,65 +75,8 @@ def fitting_prog(s1):
     
     plt.ylim(-0.1,1.3)
     plt.legend(fontsize=12)
-    st.pyplot(fig)
-    return data
-def scatter_plot(df):
-    st.markdown(f"# Coronavirus simulation data plot")
-    col1,col2,col3,col4=st.columns(4)
-    with col1:
-        labelfont=st.selectbox("Select label font size",range(15,50))
-    with col2:
-        ticksfont=st.selectbox("ticks label font size",range(15,50))
-    with col3:
-        legendfont=st.selectbox("Legend font size",range(15,50))
-    with col4:
-        log=st.selectbox("Set yaxis scale Log",[False,True])
-    X=st.sidebar.selectbox('Select x axis',['Infectiontime','runtime'])
-    Y=st.sidebar.selectbox('Column Name',list(df.columns)[1:])
-    
-    fig = plt.figure(figsize = (10, 5))
-    plt.plot(df[X],df[Y],label=Y)
-    plt.xlabel(X,fontsize=labelfont)
-    plt.ylabel("Counts",fontsize=labelfont)
-    plt.xticks(fontsize=ticksfont)
-    plt.yticks(fontsize=ticksfont)
-    plt.legend(fontsize=legendfont)
-    if log:
-        plt.yscale('log')
-    st.pyplot(fig)
-    st.button("Re-run")
-def Multi_plot(df):
-    X=st.sidebar.selectbox('Select x axis',['Infectiontime','runtime'])
-    if X=="runtime":
-        z=st.sidebar.select_slider("Select x axis range",list(df[X]),value=[df[X].min(),df[X].max()])
-    else:
-        z=st.sidebar.select_slider("Select x axis range",sorted(set(df[X])),value=[df[X].min(),df[X].max()])
-    Y=st.sidebar.multiselect('Column Name',list(df.columns),default=list(df.columns)[2:10])
-    minIndex=df[df[X]==z[0]].index
-    maxIndex=df[df[X]==z[1]].index
-   
-    st.markdown(f"# Coronavirus simulation data plot")
-    col1,col2,col3,col4=st.columns(4)
-    with col1:
-        labelfont=st.selectbox("Select label font size",range(15,50))
-    with col2:
-        ticksfont=st.selectbox("ticks label font size",range(15,50))
-    with col3:
-        legendfont=st.selectbox("Legend font size",range(10,50))
-    with col4:
-        log=st.selectbox("Set yaxis scale log",[False,True])
-    fig = plt.figure(figsize = (10, 8))
-    plt.plot(df[X].iloc[minIndex[0]:maxIndex[-1]],df[Y].iloc[minIndex[0]:maxIndex[-1]],label=Y)
-    plt.legend(fontsize=legendfont,bbox_to_anchor=(1.0,1.2))
-    plt.xlabel(X,fontsize=labelfont)
-    plt.ylabel("Counts",fontsize=labelfont)
-    plt.xticks(fontsize=ticksfont)
-    plt.yticks(fontsize=ticksfont)
-    plt.xlim(z)
-    if log:
-        plt.yscale('log')
-    st.pyplot(fig)
-    st.button("Reload data")
+    # st.pyplot(fig)
+    return fig,data ,np.corrcoef(y,out.best_fit)[0,1]
 def findPeaks(s=pd.Series(),prominence=0.005,width=50):
     peaks, properties = signal.find_peaks(s, prominence=prominence, width=width,distance=50)
     return pd.DataFrame(index=pd.Series(peaks,name='peak'),data=properties).reset_index()
@@ -142,7 +92,8 @@ def main():
             df=pd.read_excel("test.xlsx",names=['vol','Abs','x'])
             s1=df['Abs']
             data=fitting_prog(s1)
-            df_out["test.xlsx"]=pd.Series(data)
+            peaks = findPeaks(s1[s1.index<6000])
+            df_out["test.xlsx"]=pd.Series(data,peaks)
             st.markdown("# Dataframe Overview")
             st.dataframe(df_out,1000, 1000)
             csv = convert_df(df_out)
@@ -161,8 +112,34 @@ def main():
                 st.sidebar.write(uploaded_file.name)
                 df=pd.read_excel(uploaded_file,names=['vol','Abs','x'])
                 s1=df['Abs']
-                data=fitting_prog(s1)
-                df_out[uploaded_file.name]=pd.Series(data)
+                peaks = findPeaks(s1[s1.index<6000])
+                fig,data,coff=fitting_prog(s1,peaks)
+                st.pyplot(fig)
+                flg=st.checkbox(label=f"Recalculate for {uploaded_file.name}")
+                if(coff<0.97 or flg):
+                    fig2 = df['Abs'].plot()
+                    st.plotly_chart(fig2)
+                    peaks = findPeaks(s1[s1.index<6000])
+                    N=len(peaks)
+                    # st.write(len(peaks),peaks)
+                    
+                    N=int(st.sidebar.text_input(value =N,label=f"Enter Number of peaks"))
+                    # while flg:
+                    while(len(peaks)<=N):
+                       peaks.loc[peaks.shape[0]] = [0, 0, 0,0, 0, 0,0, 0]
+                    #    st.write(peaks['peak'])
+                        # else:
+                        #     flg=False
+                    with st.form(key=f'my_form{uploaded_file.name}'):
+                        for i in range(int(N)):
+                            peaks['peak'][i]=int(st.text_input(value =peaks['peak'][i],label=f"Enter position of peaks{i} file: {uploaded_file.name}"))
+                        submit_button = st.form_submit_button(label='Submit')
+                        fig, data,coff=fitting_prog(s1,peaks)
+                        df_out[uploaded_file.name]=pd.Series(data)
+                        st.pyplot(fig)
+                else:
+                    df_out[uploaded_file.name]=pd.Series(data)
+               
             st.markdown("# Dataframe Overview")
             # z=st.sidebar.slider("Select rows",0,df_out.shape[0],value=[0,df_out.shape[0]])
             # st.markdown(f"slected range is {z}")
