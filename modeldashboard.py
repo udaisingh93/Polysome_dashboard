@@ -89,7 +89,7 @@ def main():
             peaks = findPeaks(s1[s1.index<6000])
             fig,data,coff=fitting_prog(s1,peaks)
             st.pyplot(fig)
-            df_out["test.xlsx"]=pd.Series(data,peaks)
+            df_out["test.xlsx"]=pd.Series(data)
             st.markdown("# Dataframe Overview")
             st.dataframe(df_out,1000, 1000)
             csv = convert_df(df_out)
